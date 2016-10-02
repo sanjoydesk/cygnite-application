@@ -1,9 +1,8 @@
 <?php
-use Cygnite\Foundation\Bootstrappers\ApplicationBootstraper;
+use Cygnite\Bootstrappers\ConfigBootstrapper;
+use Apps\Bootstrappers\RouterBootstraper;
 
-/**
- * Define all the bootstrappers classes in below array
- */
 return [
-    ApplicationBootstraper::class,
+    Cygnite\Foundation\Bootstrappers\ViewBootstraper::class,
+    Apps\Bootstrappers\ConfigBootstraper::class
 ];

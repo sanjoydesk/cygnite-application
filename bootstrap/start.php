@@ -1,11 +1,13 @@
 <?php
 use Cygnite\Helpers\Config;
+use Cygnite\Http\Requests\Request;
 use Cygnite\Foundation\Application;
 use Cygnite\Bootstrappers\Bootstrapper;
+use Cygnite\Bootstrappers\BootstrapperDispatcher;
 
 
 $paths = require __DIR__.'/paths.php';
-Config::init($paths['app.config'], require $paths['app.config'].DS.'files'.EXT);
+Config::init($paths['app.config'], require $paths['app.config'].DS.'files.php');
 
 /*
 | -------------------------------------------------------------
@@ -19,7 +21,11 @@ if (version_compare(PHP_VERSION, '7.0', '<') === true) {
     die('Cygnite Framework Requires PHP v7.0 or Above! \n');
 }
 
-$container = new \Cygnite\Container\Container();
+$container = new \Cygnite\Container\Container(
+    new \Cygnite\Container\Injector(),
+    include $paths['app.config'].DS.'definitions'.DS.'configuration.php',
+    $paths['app.namespace'].'\\Controllers\\'
+);
 /*
 |--------------------------------------------------------------------------
 | Set Application Default Timezone
@@ -51,16 +57,14 @@ if (ENV == 'development') {
 }
 
 // Register debugger into the application
-$container->singleton('debugger', function () {
-    return new \Apps\Exceptions\Handler();
+$container->singleton('debugger', function () use($paths) {
+    return new \Apps\Exceptions\Handler($paths);
 });
 
 $container['debugger']->setEnv(ENV)->handleException();
-
 $bootstrapper = new Bootstrapper(new \Cygnite\Bootstrappers\Paths($paths));
-$bootstrapper->registerBootstrappers(require $paths['app.config'].DS.'bootstrappers'.EXT);
+$bootstrapper->registerBootstrappers(require $paths['app.config'].DS.'bootstrappers.php');
 
-$bootstrapDispatcher = new \Cygnite\Bootstrappers\BootstrapperDispatcher($container, $bootstrapper);
 /*
 |--------------------------------------------------------------------------
 | Create The Application
@@ -70,15 +74,9 @@ $bootstrapDispatcher = new \Cygnite\Bootstrappers\BootstrapperDispatcher($contai
 | which serves glue for all the components, and binding components
 | with the IoC container
 */
-$app = new Application($container, $bootstrapDispatcher);
-/**
-| ---------------------------------------------------
-| Application booting process
-| --------------------------------------------------
- *
- * Set configuration and services and boot-up application
- */
-//$app->configure();
+$app = new Application($container, new BootstrapperDispatcher($container, $bootstrapper));
+
+$kernel = $app->createKernel('\Apps\Kernel');
 
 /*
 |--------------------------------------------------------------------------
@@ -89,11 +87,7 @@ $app = new Application($container, $bootstrapDispatcher);
 | back to the browser. Http middlewares will get executed during the request
 | handling process.
 */
-$kernel = $app->createKernel('\Apps\Kernel');
-
-$response = $kernel->handle(
-    $request = \Cygnite\Http\Requests\Request::createFromGlobals()
-);
+$response = $kernel->handle($request = Request::createFromGlobals());
 
 $response->send();
 
