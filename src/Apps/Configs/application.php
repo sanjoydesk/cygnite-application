@@ -73,7 +73,6 @@ return [
     */
     'environment' => 'development', //Errors are turned on in development environment
 
-
     /*
      | --------------------------------------------------------------------------
      | Active Application Event Middleware
@@ -98,6 +97,15 @@ return [
      *
      */
     'bootstrappers.activate' => true,
+
+    /**
+     *
+     */
+    'aliases' => [
+        'classes' => [
+            'Api' => Apps\Resources\Extensions\Api::class,// you can access Api object new \Api
+        ]
+    ],
 
     /*
     |--------------------------------------------------------------------------
