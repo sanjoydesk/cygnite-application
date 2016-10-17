@@ -4,5 +4,5 @@ use Apps\Bootstrappers\RouterBootstraper;
 
 return [
     Cygnite\Foundation\Bootstrappers\ViewBootstraper::class,
-    Apps\Bootstrappers\ConfigBootstraper::class
+    Cygnite\Foundation\Bootstrappers\AliasLoaderBootstraper::class,
 ];
