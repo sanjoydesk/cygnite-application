@@ -9,16 +9,19 @@
  */
 namespace Apps\Middleware\Events;
 
-use Cygnite\Foundation\Application;
-use Cygnite\Base\EventHandler\Event as EventListener;
+use Cygnite\Container\ContainerAwareInterface;
+use Cygnite\EventHandler\Event as EventListener;
 
 /**
  * Class Event
  *
  * @package Apps\Middleware\Events
  */
-class Event extends EventListener
+class Event
 {
+    /** @var EventListener */
+    protected $event;
+
     /**
      * The event handler mappings for the application.
      * You can add number of event in below array, When ever
@@ -28,16 +31,13 @@ class Event extends EventListener
      * <code>
      * 'event.name' => '\Apps\Resources\Extensions\Api@run'
      *
-     *  will execute
+     *  will executes
      *
      *  public function beforeRun() {}
-     *
      *  public function run() {}
-     *
      *  public function afterRun() {}
      *
-     *
-     * $this->fire('event.name');
+     * $this->fire('event.api.run');
      * </code>
      *
      * @var array
@@ -47,36 +47,57 @@ class Event extends EventListener
     ];
 
     /**
-     * Activate application event, return true/false
+     * Event constructor.
+     *
+     * @param EventListener $event
+     */
+    public function __construct(EventListener $event)
+    {
+        $this->event = $event;
+    }
+
+    /**
+     * Activate application event, return true/false.
      *
      * @return bool
      */
-    public function isAppEventEnabled()
+    public function isAppEventEnabled() : bool
     {
         return true;
     }
 
     /**
      * This events will get executed before and after
-     * Application::bootApplication() method
+     * Application::bootApplication() method.
      *
      * @return array
      */
-    public function registerAppEvents()
+    public function registerAppEvents() : array
     {
         return [
-        'beforeBootingApplication' => '\Apps\Resources\Extensions\Api@payment',
-        'afterBootingApplication' => '\Apps\Resources\Extensions\Api@paymentSuccess'
-    ];
+            'beforeBootingApplication' => '\Apps\Resources\Extensions\Api@payment',
+            'afterBootingApplication' => '\Apps\Resources\Extensions\Api@paymentSuccess'
+        ];
     }
 
     /**
-     * Fire Registered events or set into container object
-     * @param $container
+     * Returns EventListener Instance.
+     *
+     * @return EventListener
      */
-    public function register($container)
+    public function getEventListener() : EventListener
     {
-        parent::boot($this);
-        $container['event.api.run'] = $this->fire('event.api.run');
+        return $this->event;
+    }
+
+    /**
+     * Fire Registered events or set into container object.
+     *
+     * @param $container ContainerAwareInterface
+     */
+    public function handle(ContainerAwareInterface $container)
+    {
+        $this->event->boot($this->listen);
+        $this->event->fire('event.api.run');
     }
 }
